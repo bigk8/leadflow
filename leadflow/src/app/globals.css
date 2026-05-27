@@ -1,0 +1,191 @@
+/* ═══════════════════════════════════════════════════════════
+   Google Fonts — Noto Sans Hebrew
+   weights: 400 (regular) | 500 (medium) | 600 (semibold)
+   ═══════════════════════════════════════════════════════════ */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════
+   Design Tokens — Light Mode
+   ═══════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    /* Surfaces */
+    --background:          0 0% 100%;
+    --foreground:          224 71% 4%;
+    --card:                0 0% 100%;
+    --card-foreground:     224 71% 4%;
+    --popover:             0 0% 100%;
+    --popover-foreground:  224 71% 4%;
+
+    /* Brand */
+    --primary:             221 83% 53%;
+    --primary-foreground:  210 40% 98%;
+
+    /* Neutral */
+    --secondary:            220 14% 96%;
+    --secondary-foreground: 220  9% 46%;
+    --muted:                220 14% 96%;
+    --muted-foreground:     220  9% 46%;
+    --accent:               220 14% 96%;
+    --accent-foreground:    224 71%  4%;
+
+    /* Feedback */
+    --destructive:            0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Chrome */
+    --border:  220 13% 91%;
+    --input:   220 13% 91%;
+    --ring:    221 83% 53%;
+    --radius:  0.625rem;
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    --sidebar-background:           222 47% 11%;
+    --sidebar-foreground:           213 31% 91%;
+    --sidebar-primary:              217 91% 65%;
+    --sidebar-primary-foreground:     0  0% 100%;
+    --sidebar-accent:               223 47% 16%;
+    --sidebar-accent-foreground:    213 31% 91%;
+    --sidebar-border:               223 47% 18%;
+    --sidebar-ring:                 217 91% 65%;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     Design Tokens — Dark Mode
+     ═══════════════════════════════════════════════════════════ */
+  .dark {
+    --background:          224 71%  4%;
+    --foreground:          210 40% 98%;
+    --card:                224 71%  4%;
+    --card-foreground:     210 40% 98%;
+    --popover:             224 71%  4%;
+    --popover-foreground:  210 40% 98%;
+
+    --primary:             217 91% 60%;
+    --primary-foreground:  224 71%  4%;
+
+    --secondary:            215 28% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted:                215 28% 17%;
+    --muted-foreground:     217 11% 65%;
+    --accent:               215 28% 17%;
+    --accent-foreground:    210 40% 98%;
+
+    --destructive:            0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 28% 17%;
+    --input:  215 28% 17%;
+    --ring:   217 91% 60%;
+
+    /* Sidebar stays dark, subtle shift */
+    --sidebar-background:           222 47%  7%;
+    --sidebar-foreground:           213 31% 91%;
+    --sidebar-primary:              217 91% 65%;
+    --sidebar-primary-foreground:     0  0% 100%;
+    --sidebar-accent:               223 47% 12%;
+    --sidebar-accent-foreground:    213 31% 91%;
+    --sidebar-border:               223 47% 14%;
+    --sidebar-ring:                 217 91% 65%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Base Styles
+   ═══════════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border box-border;
+  }
+
+  html {
+    direction: rtl;          /* RTL — עברית כברירת מחדל */
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Noto Sans Hebrew", -apple-system, "Segoe UI",
+      "Arial Hebrew", Arial, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* LTR overrides for data fields */
+  input[type="email"],
+  input[type="url"],
+  input[type="number"],
+  input[type="tel"] {
+    direction: ltr;
+    text-align: right;
+  }
+
+  input[type="password"] {
+    direction: ltr;
+    text-align: right;
+    letter-spacing: 0.125em;
+  }
+
+  /* Headings */
+  h1 { @apply scroll-m-20 text-4xl font-bold   tracking-tight; }
+  h2 { @apply scroll-m-20 text-3xl font-bold   tracking-tight; }
+  h3 { @apply scroll-m-20 text-2xl font-semibold; }
+  h4 { @apply scroll-m-20 text-xl  font-semibold; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Scrollbar — subtle, cross-browser
+   ═══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar         { width: 5px; height: 5px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   {
+  @apply bg-border rounded-full;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/40; }
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Utilities
+   ═══════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Flip directional icons for RTL (arrows, chevrons etc.) */
+  .rtl-flip { transform: scaleX(-1); }
+
+  /* Page / section entrance animation */
+  .page-enter   { @apply animate-fade-in; }
+  .slide-enter  { @apply animate-slide-in-right; }
+
+  /* Focus ring consistent with brand */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-ring focus-visible:ring-offset-2
+           focus-visible:ring-offset-background;
+  }
+
+  /* Card hover lift */
+  .card-hover {
+    @apply transition-all duration-200
+           hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  /* Truncate with ellipsis — common in tables */
+  .truncate-cell {
+    @apply truncate max-w-[200px];
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Sonner Toast — RTL overrides
+   ═══════════════════════════════════════════════════════════ */
+[data-sonner-toaster][dir="rtl"] {
+  font-family: inherit;
+}

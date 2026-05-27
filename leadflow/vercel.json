@@ -1,0 +1,31 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "nodejs": "20.x",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Supabase project URL"
+    },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+      "description": "Supabase anonymous key"
+    },
+    "NEXT_PUBLIC_APP_URL": {
+      "description": "Application URL",
+      "required": false
+    },
+    "NEXT_PUBLIC_APP_NAME": {
+      "description": "Application name",
+      "required": false
+    }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "analytics": {
+    "enabled": true
+  }
+}
