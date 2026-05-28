@@ -23,8 +23,5 @@
     "deploymentEnabled": {
       "main": true
     }
-  },
-  "analytics": {
-    "enabled": true
   }
 }
