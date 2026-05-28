@@ -52,5 +52,3 @@ Makefile
 # Other
 .eslintignore
 .prettierignore
-tsconfig.json
-next.config.js
