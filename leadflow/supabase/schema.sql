@@ -138,6 +138,7 @@ create table public.leads (
 
   -- favorites
   is_favorite boolean     not null default false,
+  is_irrelevant boolean   not null default false,
 
   -- constraints
   constraint leads_email_format

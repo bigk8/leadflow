@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   flexRender,
@@ -121,10 +121,11 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
 
   /* ── Mark as irrelevant ───────────────────────────────────────────────── */
 
-  const handleToggleIrrelevant = async (leadId: string, isIrrelevant: boolean) => {
+  const handleToggleIrrelevant = useCallback(async (leadId: string, isIrrelevant: boolean) => {
     try {
       const { error } = await supabase
         .from("leads")
+        // @ts-expect-error - Supabase client type inference issue with new columns
         .update({ is_irrelevant: isIrrelevant })
         .eq("id", leadId);
 
@@ -143,14 +144,15 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
       toast.error("שגיאה בלתי צפויה");
       console.error("Error:", err);
     }
-  };
+  }, [supabase]);
 
   /* ── Toggle favorite ───────────────────────────────────────────────────── */
 
-  const handleToggleFavorite = async (leadId: string, isFavorite: boolean) => {
+  const handleToggleFavorite = useCallback(async (leadId: string, isFavorite: boolean) => {
     try {
       const { error } = await supabase
         .from("leads")
+        // @ts-expect-error - Supabase client type inference issue with new columns
         .update({ is_favorite: isFavorite })
         .eq("id", leadId);
 
@@ -186,7 +188,7 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
       toast.error("שגיאה בלתי צפויה");
       console.error("Unexpected error:", err);
     }
-  };
+  }, [supabase]);
 
   /* ── Filtered data (status + priority + source + global search) ──────── */
 
@@ -463,7 +465,7 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
         );
       },
     },
-  ], [router]);
+  ], [router, handleToggleFavorite, handleToggleIrrelevant]);
 
   /* ── Table instance ──────────────────────────────────────────────────── */
 
@@ -699,7 +701,7 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
 
               // חישוב טווח עמודים להצגה
               let startPage = Math.max(0, currentPage - halfVisible);
-              let endPage = Math.min(pageCount - 1, startPage + visiblePages - 1);
+              const endPage = Math.min(pageCount - 1, startPage + visiblePages - 1);
 
               // התאם את ההתחלה אם קרובים לסוף
               if (endPage - startPage < visiblePages - 1) {
