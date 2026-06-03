@@ -19,6 +19,7 @@ import {
   Star,
   Menu,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn, getInitials } from "@/lib/utils";
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { href: "/tasks",     label: "משימות",     icon: CheckSquare     },
   { href: "/reminders", label: "תזכורות",    icon: Bell            },
   { href: "/reports",   label: "דוחות",      icon: BarChart3       },
+  { href: "/irrelevant", label: "לא רלוונטי", icon: AlertCircle     },
 ] as const;
 
 /* ─── Props ─────────────────────────────────────────────────────────────── */
