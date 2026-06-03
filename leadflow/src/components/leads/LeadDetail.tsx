@@ -9,7 +9,7 @@ import {
   Briefcase, Calendar, DollarSign, ArrowLeft,
   PhoneOutgoing, PhoneIncoming, Video, Users as UsersIcon,
   MessageSquare, MoreHorizontal, CheckSquare, Clock,
-  CheckCircle2, XCircle, Trash2,
+  CheckCircle2, XCircle, Trash2, Star,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { he } from "date-fns/locale";
@@ -352,6 +352,19 @@ export function LeadDetail({
     toast.success("עודכן!");
   };
 
+  /* ── Toggle favorite ──────────────────────────────────────────────────── */
+
+  const handleToggleFavorite = async (isFavorite: boolean) => {
+    const { error } = await supabase
+      .from("leads")
+      .update({ is_favorite: isFavorite } as unknown as never)
+      .eq("id", lead.id);
+
+    if (error) { toast.error("שגיאה בעדכון"); return; }
+    setLead((prev) => ({ ...prev, is_favorite: isFavorite }));
+    toast.success(isFavorite ? "נוסף להועדפים ⭐" : "הוסר מהעדפים");
+  };
+
   /* ── Delete call ─────────────────────────────────────────────────────── */
 
   const deleteCall = async (callId: string) => {
@@ -510,6 +523,17 @@ export function LeadDetail({
             </a>
           </Button>
         )}
+        <Button
+          variant="outline"
+          size="icon"
+          title={lead.is_favorite ? "הסר מהעדפים" : "הוסף להעדפים"}
+          onClick={() => handleToggleFavorite(!lead.is_favorite)}
+        >
+          <Star
+            className="w-4 h-4"
+            fill={lead.is_favorite ? "currentColor" : "none"}
+          />
+        </Button>
       </div>
 
       {/* ── Main content: 2-col ──────────────────────────────────────────── */}
