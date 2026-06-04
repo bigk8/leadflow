@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Search, Bell, Moon, Sun, X, Monitor } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ interface TopBarProps {
 /* ─── TopBar ────────────────────────────────────────────────────────────── */
 
 export function TopBar({ user }: TopBarProps) {
+  const router = useRouter();
   const [searchOpen,  setSearchOpen]  = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +104,13 @@ export function TopBar({ user }: TopBarProps) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      router.push(`/leads?search=${encodeURIComponent(searchQuery.trim())}`);
+      clearSearch();
+    }
+  };
+
   const clearSearch = () => {
     setSearchQuery("");
     setSearchOpen(false);
@@ -126,6 +135,7 @@ export function TopBar({ user }: TopBarProps) {
             ref={inputRef}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchSubmit}
             onFocus={() => setSearchOpen(true)}
             onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
             placeholder="חיפוש לידים, שיחות... (⌘K)"

@@ -84,11 +84,12 @@ function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
 
 interface LeadsTableProps {
   initialData: LeadRow[];
+  initialSearchQuery?: string;
 }
 
 /* ─── Component ─────────────────────────────────────────────────────────── */
 
-export function LeadsTable({ initialData }: LeadsTableProps) {
+export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableProps) {
   const router    = useRouter();
   const supabase  = createClient();
   const [isPending, startTransition] = useTransition();
@@ -98,7 +99,7 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
   const [sorting,         setSorting]        = useState<SortingState>([{ id: "created_at", desc: true }]);
   const [columnFilters,   setColumnFilters]  = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [globalFilter,    setGlobalFilter]   = useState("");
+  const [globalFilter,    setGlobalFilter]   = useState(initialSearchQuery);
 
   // UI state
   const [deleteId,           setDeleteId]          = useState<string | null>(null);

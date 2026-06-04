@@ -14,6 +14,10 @@ import { MigrationBanner } from "@/components/leads/MigrationBanner";
 
 export const metadata: Metadata = { title: "לידים" };
 
+interface LeadsPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
 /* ─── Stats row ─────────────────────────────────────────────────────────── */
 
 function StatsRow({ leads }: { leads: LeadRow[] }) {
@@ -80,7 +84,7 @@ function StatsRow({ leads }: { leads: LeadRow[] }) {
 
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 
-export default async function LeadsPage() {
+export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   const supabase = await createClient();
 
   const {
@@ -100,6 +104,9 @@ export default async function LeadsPage() {
     ...lead,
     is_favorite: lead.is_favorite ?? false,
   }));
+
+  const params = await searchParams;
+  const initialSearchQuery = (params.search as string) ?? "";
 
   return (
     <div className="space-y-6">
@@ -127,7 +134,7 @@ export default async function LeadsPage() {
       {/* ── Table ──────────────────────────────────────────────────────── */}
       <Card className="border-border/50">
         <CardContent className="pt-6">
-          <LeadsTable initialData={allLeads} />
+          <LeadsTable initialData={allLeads} initialSearchQuery={initialSearchQuery} />
         </CardContent>
       </Card>
     </div>
