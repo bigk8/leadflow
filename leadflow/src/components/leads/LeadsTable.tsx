@@ -110,6 +110,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [hideIrrelevant,     setHideIrrelevant]    = useState(true);
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
+  const [sortBy,             setSortBy]            = useState<string>("newest");
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -196,7 +197,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   /* ── Filtered data (status + priority + source + global search) ──────── */
 
   const filteredData = useMemo(() => {
-    return data.filter((lead) => {
+    let filtered = data.filter((lead) => {
       if (hideIrrelevant && lead.is_irrelevant)                           return false;
       if (statusFilter   !== "all" && lead.status   !== statusFilter)   return false;
       if (priorityFilter !== "all" && lead.priority !== priorityFilter) return false;
@@ -212,7 +213,21 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
       }
       return true;
     });
-  }, [data, statusFilter, priorityFilter, sourceFilter, favoritesFilter, hideIrrelevant, globalFilter]);
+
+    // Sort by sortBy
+    const sorted = [...filtered];
+    if (sortBy === "newest") {
+      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (sortBy === "oldest") {
+      sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    } else if (sortBy === "favorites") {
+      sorted.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0));
+    } else if (sortBy === "non-favorites") {
+      sorted.sort((a, b) => (a.is_favorite ? 1 : 0) - (b.is_favorite ? 1 : 0));
+    }
+
+    return sorted;
+  }, [data, statusFilter, priorityFilter, sourceFilter, favoritesFilter, hideIrrelevant, globalFilter, sortBy]);
 
   /* ── Column definitions ──────────────────────────────────────────────── */
 
@@ -605,6 +620,19 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
               {LEAD_SOURCES.map((s) => (
                 <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+
+          {/* Sort */}
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="h-9 w-[130px] md:w-[150px] text-xs md:text-sm">
+              <SelectValue placeholder="מיון" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">מהליד החדש ביותר</SelectItem>
+              <SelectItem value="oldest">מהליד הישן ביותר</SelectItem>
+              <SelectItem value="favorites">מועדפים</SelectItem>
+              <SelectItem value="non-favorites">ללא מועדפים</SelectItem>
             </SelectContent>
           </Select>
 
