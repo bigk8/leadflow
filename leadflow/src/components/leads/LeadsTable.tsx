@@ -109,6 +109,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [favoritesFilter,    setFavoritesFilter]   = useState(false);
   const [hideIrrelevant,     setHideIrrelevant]    = useState(true);
   const [pageInput,          setPageInput]         = useState<string>("");
+  const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -216,6 +217,43 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   /* ── Column definitions ──────────────────────────────────────────────── */
 
   const columns = useMemo<ColumnDef<LeadRow>[]>(() => [
+    // Checkbox selection
+    {
+      id: "select",
+      header: () => (
+        <input
+          type="checkbox"
+          checked={selectedIds.size > 0 && selectedIds.size === filteredData.length}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedIds(new Set(filteredData.map(l => l.id)));
+            } else {
+              setSelectedIds(new Set());
+            }
+          }}
+          className="rounded border-border"
+          title={selectedIds.size > 0 ? `${selectedIds.size} לידים נבחרים` : "בחר הכל"}
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(row.original.id)}
+          onChange={(e) => {
+            const newSelected = new Set(selectedIds);
+            if (e.target.checked) {
+              newSelected.add(row.original.id);
+            } else {
+              newSelected.delete(row.original.id);
+            }
+            setSelectedIds(newSelected);
+          }}
+          className="rounded border-border"
+        />
+      ),
+      size: 40,
+    },
+
     // שם מלא
     {
       id: "full_name",
@@ -467,7 +505,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         );
       },
     },
-  ], [router, handleToggleFavorite, handleToggleIrrelevant]);
+  ], [router, handleToggleFavorite, handleToggleIrrelevant, selectedIds, filteredData, setSelectedIds]);
 
   /* ── Table instance ──────────────────────────────────────────────────── */
 
