@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   const [leadsRes, tasksRes] = await Promise.all([
     supabase
       .from("leads")
-      .select("id,first_name,last_name,company,status,priority,deal_value,created_at,phone")
+      .select("id,first_name,last_name,company,status,priority,deal_value,created_at,phone,is_irrelevant")
       .order("created_at", { ascending: false }),
     supabase
       .from("tasks")
