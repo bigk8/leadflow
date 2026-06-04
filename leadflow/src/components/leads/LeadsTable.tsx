@@ -111,6 +111,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
+  const [currentPageIndex,   setCurrentPageIndex]  = useState(0);
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -527,10 +528,19 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const table = useReactTable({
     data: filteredData,
     columns,
-    state:         { sorting, columnFilters, columnVisibility },
+    state:         {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      pagination:   { pageIndex: currentPageIndex, pageSize: 20 }
+    },
     onSortingChange:          setSorting,
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange:       (updater) => {
+      const newState = typeof updater === 'function' ? updater({ pageIndex: currentPageIndex, pageSize: 20 }) : updater;
+      setCurrentPageIndex(newState.pageIndex);
+    },
     getCoreRowModel:          getCoreRowModel(),
     getSortedRowModel:        getSortedRowModel(),
     getFilteredRowModel:      getFilteredRowModel(),
