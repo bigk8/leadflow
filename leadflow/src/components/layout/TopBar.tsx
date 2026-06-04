@@ -104,9 +104,10 @@ export function TopBar({ user }: TopBarProps) {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearchSubmit = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && searchQuery.trim()) {
-      router.push(`/leads?search=${encodeURIComponent(searchQuery.trim())}`);
+      // Navigate first, then clear (router.push is synchronous in Next.js)
+      await router.push(`/leads?search=${encodeURIComponent(searchQuery.trim())}`);
       clearSearch();
     }
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback } from "react";
+import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -218,9 +218,17 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     // Sort by sortBy
     const sorted = [...filtered];
     if (sortBy === "newest") {
-      sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      sorted.sort((a, b) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return timeB - timeA;
+      });
     } else if (sortBy === "oldest") {
-      sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      sorted.sort((a, b) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return timeA - timeB;
+      });
     } else if (sortBy === "favorites") {
       sorted.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0));
     } else if (sortBy === "non-favorites") {
@@ -236,21 +244,33 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     // Checkbox selection
     {
       id: "select",
-      header: () => (
-        <input
-          type="checkbox"
-          checked={selectedIds.size > 0 && selectedIds.size === filteredData.length}
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedIds(new Set(filteredData.map(l => l.id)));
-            } else {
-              setSelectedIds(new Set());
-            }
-          }}
-          className="rounded border-border"
-          title={selectedIds.size > 0 ? `${selectedIds.size} לידים נבחרים` : "בחר הכל"}
-        />
-      ),
+      header: () => {
+        // Only show checked if ALL visible rows on this page are selected
+        const pageRows = table.getRowModel().rows;
+        const allPageRowsSelected = pageRows.length > 0 && pageRows.every(row => selectedIds.has(row.original.id));
+        return (
+          <input
+            type="checkbox"
+            checked={allPageRowsSelected}
+            onChange={(e) => {
+              const pageRowIds = new Set(table.getRowModel().rows.map(r => r.original.id));
+              if (e.target.checked) {
+                // Add only this page's rows to selection
+                const newSelected = new Set(selectedIds);
+                pageRowIds.forEach(id => newSelected.add(id));
+                setSelectedIds(newSelected);
+              } else {
+                // Remove only this page's rows from selection
+                const newSelected = new Set(selectedIds);
+                pageRowIds.forEach(id => newSelected.delete(id));
+                setSelectedIds(newSelected);
+              }
+            }}
+            className="rounded border-border"
+            title={selectedIds.size > 0 ? `${selectedIds.size} לידים נבחרים` : "בחר עמוד זה"}
+          />
+        );
+      },
       cell: ({ row }) => (
         <input
           type="checkbox"
@@ -561,7 +581,13 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setSourceFilter("all");
     setFavoritesFilter(false);
     setGlobalFilter("");
+    setCurrentPageIndex(0); // Reset to page 1 when filters clear
   };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPageIndex(0);
+  }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 

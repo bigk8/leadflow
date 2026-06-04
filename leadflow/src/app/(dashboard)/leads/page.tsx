@@ -106,7 +106,9 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
   }));
 
   const params = await searchParams;
-  const initialSearchQuery = (params.search as string) ?? "";
+  // Handle both string and array cases for search param
+  const searchParam = params.search;
+  const initialSearchQuery = typeof searchParam === 'string' ? searchParam : (Array.isArray(searchParam) ? searchParam[0] : "") ?? "";
 
   return (
     <div className="space-y-6">
