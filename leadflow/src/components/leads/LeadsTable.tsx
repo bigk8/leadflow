@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition, useCallback } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   flexRender,
@@ -231,12 +232,12 @@ export function LeadsTable({ initialData }: LeadsTableProps) {
         const lead = row.original;
         return (
           <div>
-            <button
-              onClick={() => router.push(`/leads/${lead.id}`)}
+            <Link
+              href={`/leads/${lead.id}`}
               className="font-medium hover:text-primary transition-colors text-right"
             >
               {lead.first_name} {lead.last_name}
-            </button>
+            </Link>
             {lead.position && (
               <p className="text-xs text-muted-foreground mt-0.5">{lead.position}</p>
             )}
