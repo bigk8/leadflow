@@ -23,7 +23,7 @@ interface LeadsPageProps {
 function StatsRow({ leads }: { leads: LeadRow[] }) {
   const total      = leads.length;
   const active     = leads.filter((l) =>
-    !["closed_won", "closed_lost"].includes(l.status)
+    !["closed_won", "closed_lost"].includes(l.status) && !l.is_irrelevant
   ).length;
   const won        = leads.filter((l) => l.status === "closed_won").length;
   const totalValue = leads
