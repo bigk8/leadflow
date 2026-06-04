@@ -14,7 +14,7 @@ import type { LeadRow, TaskRow } from "@/types/database.types";
 function computeStats(leads: LeadRow[]): StatsData {
   return {
     totalLeads:  leads.length,
-    activeLeads: leads.filter((l) => !["closed_won","closed_lost"].includes(l.status)).length,
+    activeLeads: leads.filter((l) => !["closed_won","closed_lost"].includes(l.status) && !l.is_irrelevant).length,
     closedWon:   leads.filter((l) => l.status === "closed_won").length,
     totalValue:  leads
       .filter((l) => l.status === "closed_won")
