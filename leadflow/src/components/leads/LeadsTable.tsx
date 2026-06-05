@@ -111,7 +111,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
-  const [currentPageIndex,   setCurrentPageIndex]  = useState(0);
+  const [currentPageIndex,   setCurrentPageIndex]  = useState(() => {
+    // Restore page from localStorage on init
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('leadsTablePageIndex');
+      return saved ? parseInt(saved, 10) : 0;
+    }
+    return 0;
+  });
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -588,6 +595,13 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   useEffect(() => {
     setCurrentPageIndex(0);
   }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
+
+  // Save current page to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('leadsTablePageIndex', currentPageIndex.toString());
+    }
+  }, [currentPageIndex]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
