@@ -584,7 +584,34 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     getPaginationRowModel:    getPaginationRowModel(),
     initialState:             { pagination: { pageSize: 20 } },
     enableRowSelection:       true,
+    // Force table to use our pagination state, not its own
+    manualPagination:         false,
   });
+
+  // Force pagination state if table resets it
+  useEffect(() => {
+    const checkAndRestore = () => {
+      try {
+        const saved = sessionStorage.getItem('leadsTablePagination');
+        if (saved) {
+          const savedPagination = JSON.parse(saved);
+          const currentPageIndex = table.getState().pagination.pageIndex;
+
+          // If table's internal state was reset to page 0, restore from saved
+          if (currentPageIndex !== savedPagination.pageIndex && currentPageIndex === 0 && savedPagination.pageIndex !== 0) {
+            setPagination(savedPagination);
+          }
+        }
+      } catch {
+        // Ignore errors
+      }
+    };
+
+    // Check immediately and also on a timer to catch delayed resets
+    checkAndRestore();
+    const timer = setTimeout(checkAndRestore, 50);
+    return () => clearTimeout(timer);
+  }, [filteredData]);
 
   const hasActiveFilters =
     statusFilter !== "all" ||
