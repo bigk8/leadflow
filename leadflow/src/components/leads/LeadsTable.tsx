@@ -672,13 +672,21 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         console.error("Error saving pagination:", e);
       }
 
-      // Also try to update URL via router
+      // Update URL - use both history.replaceState and try router approaches
       try {
         const params = new URLSearchParams(window.location.search);
         params.set('page', newPagination.pageIndex.toString());
         const newUrl = `${window.location.pathname}?${params.toString()}`;
-        window.history.replaceState({ page: newPagination.pageIndex }, '', newUrl);
-        console.log(`📍 URL updated: ?page=${newPagination.pageIndex}`);
+
+        // Primary: history.replaceState (works without page reload)
+        window.history.replaceState(
+          { pagination: newPagination },
+          '',
+          newUrl
+        );
+
+        console.log(`📍 URL set to: ?page=${newPagination.pageIndex}`);
+        console.log(`📍 Current URL: ${window.location.href}`);
       } catch (e) {
         console.error("Error updating URL:", e);
       }
