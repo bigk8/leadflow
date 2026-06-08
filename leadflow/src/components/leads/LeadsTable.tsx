@@ -549,7 +549,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         );
       },
     },
-  ], [router, handleToggleFavorite, handleToggleIrrelevant, selectedIds, filteredData, setSelectedIds]);
+  ], [router, handleToggleFavorite, handleToggleIrrelevant, selectedIds, setSelectedIds]);
 
   /* ── Table instance ──────────────────────────────────────────────────── */
 
