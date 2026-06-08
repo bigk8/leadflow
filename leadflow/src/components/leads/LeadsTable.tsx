@@ -121,6 +121,9 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     }
   });
 
+  // Track previous filteredData length to detect data-only changes vs filter changes
+  const prevFilteredDataLengthRef = useRef(filteredData.length);
+
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
   const handleDelete = async () => {
@@ -599,6 +602,34 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setPagination({ pageIndex: 0, pageSize: 20 }); // Reset to page 1 when filters clear
   };
 
+
+  // Restore pagination from sessionStorage when data changes (but not filters)
+  useEffect(() => {
+    const currentLength = filteredData.length;
+    const prevLength = prevFilteredDataLengthRef.current;
+
+    // If length changed, restore pagination from sessionStorage
+    // This handles the case where data was updated but table resets pagination
+    if (currentLength !== prevLength) {
+      try {
+        const saved = sessionStorage.getItem('leadsTablePagination');
+        if (saved) {
+          const savedPagination = JSON.parse(saved);
+          // Only restore if it's different from current
+          if (
+            savedPagination.pageIndex !== pagination.pageIndex ||
+            savedPagination.pageSize !== pagination.pageSize
+          ) {
+            setPagination(savedPagination);
+          }
+        }
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    prevFilteredDataLengthRef.current = currentLength;
+  }, [filteredData.length, pagination]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
