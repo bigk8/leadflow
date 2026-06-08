@@ -570,6 +570,21 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange:       (updater) => {
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
+
+      // Prevent unwanted resets: if trying to go to page 0 when we're not, don't do it
+      // This blocks react-table's internal resets from data changes
+      const shouldBlock =
+        newPagination.pageIndex === 0 &&
+        pagination.pageIndex !== 0 &&
+        // Only block if we haven't explicitly changed filters
+        !(statusFilter !== "all" || priorityFilter !== "all" || sourceFilter !== "all" ||
+          favoritesFilter || globalFilter !== "");
+
+      if (shouldBlock) {
+        // Don't update - keep current pagination
+        return;
+      }
+
       setPagination(newPagination);
       // Also save immediately to sessionStorage to prevent loss
       try {
