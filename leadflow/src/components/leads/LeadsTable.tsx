@@ -582,10 +582,9 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     getSortedRowModel:        getSortedRowModel(),
     getFilteredRowModel:      getFilteredRowModel(),
     getPaginationRowModel:    getPaginationRowModel(),
+    pageCount:                Math.ceil(filteredData.length / pagination.pageSize),
     initialState:             { pagination: { pageSize: 20 } },
     enableRowSelection:       true,
-    // Force table to use our pagination state, not its own
-    manualPagination:         false,
   });
 
   // Force pagination state if table resets it
@@ -610,8 +609,15 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     // Check immediately and also on a timer to catch delayed resets
     checkAndRestore();
     const timer = setTimeout(checkAndRestore, 50);
-    return () => clearTimeout(timer);
-  }, [filteredData]);
+
+    // Also check after longer delay to catch any async resets
+    const timer2 = setTimeout(checkAndRestore, 200);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timer2);
+    };
+  }, [filteredData, table]);
 
   const hasActiveFilters =
     statusFilter !== "all" ||
