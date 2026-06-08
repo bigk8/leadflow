@@ -130,11 +130,14 @@ function KanbanColumn({
 /* ─── Board ─────────────────────────────────────────────────────────────── */
 
 export function PipelineBoard({ leads }: { leads: LeadRow[] }) {
+  // Filter out irrelevant leads
+  const relevantLeads = leads.filter((l) => !l.is_irrelevant);
+
   const grouped = Object.fromEntries(
-    PIPELINE_ORDER.map((s) => [s, leads.filter((l) => l.status === s)])
+    PIPELINE_ORDER.map((s) => [s, relevantLeads.filter((l) => l.status === s)])
   ) as Record<LeadStatus, LeadRow[]>;
 
-  const activeLeads = leads.filter(
+  const activeLeads = relevantLeads.filter(
     (l) => !["closed_won", "closed_lost"].includes(l.status)
   );
   const totalPipelineValue = activeLeads.reduce(

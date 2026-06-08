@@ -17,7 +17,7 @@ export default async function PipelinePage() {
 
   const { data: leads, error } = await supabase
     .from("leads")
-    .select("id,first_name,last_name,company,status,priority,deal_value,source,phone")
+    .select("id,first_name,last_name,company,status,priority,deal_value,source,phone,is_irrelevant")
     .order("created_at", { ascending: false });
 
   if (error) console.error("[PipelinePage]", error.message);

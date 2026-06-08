@@ -64,8 +64,11 @@ export default async function ReportsPage() {
     supabase.from("calls").select("id,type,outcome,called_at,duration_seconds").order("called_at", { ascending: false }),
   ]);
 
-  const leads = (leadsRes.data ?? []) as LeadRow[];
+  const allLeads = (leadsRes.data ?? []) as LeadRow[];
   const calls = (callsRes.data ?? []) as CallRow[];
+
+  // Filter out irrelevant leads for reporting
+  const leads = allLeads.filter((l) => !l.is_irrelevant);
 
   /* ── Core metrics ─────────────────────────────────────────────────────── */
 

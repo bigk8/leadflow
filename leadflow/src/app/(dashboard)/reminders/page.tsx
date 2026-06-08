@@ -13,13 +13,14 @@ export default async function RemindersPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Fetch leads with follow-up set, joined with call count
+  // Fetch leads with follow-up set, joined with call count (exclude irrelevant)
   const { data: rawLeads, error } = await supabase
     .from("leads")
     .select(`
       *,
       calls(count)
     `)
+    .eq("is_irrelevant", false)
     .not("next_follow_up_at", "is", null)
     .order("next_follow_up_at", { ascending: true });
 

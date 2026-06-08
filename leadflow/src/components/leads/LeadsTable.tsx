@@ -582,7 +582,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setSourceFilter("all");
     setFavoritesFilter(false);
     setGlobalFilter("");
-    setCurrentPageIndex(0); // Reset to page 1 when filters clear
+    setPagination({ pageIndex: 0, pageSize: 20 }); // Reset to page 1 when filters clear
   };
 
   // Reset to page 1 when filters change

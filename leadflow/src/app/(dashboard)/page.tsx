@@ -48,6 +48,8 @@ export default async function DashboardPage() {
   /* ── Pipeline (static — no realtime needed for this chart) ─────────── */
   const statusMap = new Map<string, { count: number; totalValue: number }>();
   for (const lead of allLeads) {
+    // Exclude irrelevant leads from pipeline
+    if (lead.is_irrelevant) continue;
     const e = statusMap.get(lead.status) ?? { count: 0, totalValue: 0 };
     e.count++;
     e.totalValue += lead.deal_value ?? 0;

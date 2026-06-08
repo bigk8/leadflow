@@ -48,10 +48,11 @@ export default async function CallsPage() {
     lead_company:     row.leads.company,
   }));
 
-  // Fetch leads list for the "global log call" lead selector
+  // Fetch leads list for the "global log call" lead selector (exclude irrelevant leads)
   const { data: leads } = await supabase
     .from("leads")
     .select("id, first_name, last_name, company")
+    .eq("is_irrelevant", false)
     .order("first_name");
 
   return (

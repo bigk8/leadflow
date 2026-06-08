@@ -21,6 +21,7 @@ export default async function TasksPage() {
     supabase
       .from("leads")
       .select("id,first_name,last_name")
+      .eq("is_irrelevant", false)
       .order("first_name"),
   ]);
 
