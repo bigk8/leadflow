@@ -148,10 +148,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         return;
       }
 
-      // Optimistic update
-      setData((prev) =>
-        prev.map((r) => r.id === leadId ? { ...r, is_irrelevant: isIrrelevant } : r)
-      );
+      // Optimistic update - DON'T update setData to prevent pagination reset
+      // The is_irrelevant change affects filtering (hideIrrelevant toggle)
+      if (hideIrrelevant === false) {
+        // Only update if we're showing irrelevant leads
+        setData((prev) =>
+          prev.map((r) => r.id === leadId ? { ...r, is_irrelevant: isIrrelevant } : r)
+        );
+      }
 
       toast.success(isIrrelevant ? "סומן כלא רלוונטי ✓" : "הוסר מלא רלוונטי");
     } catch (err) {
@@ -192,10 +196,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         return;
       }
 
-      // Update successful
-      setData((prev) =>
-        prev.map((r) => r.id === leadId ? { ...r, is_favorite: isFavorite } : r)
-      );
+      // Update successful - DON'T update setData to prevent pagination reset
+      // The is_favorite change doesn't affect pagination/filtering so we can skip the update
+      // Only update in place if we're actually filtering by favorites
+      if (favoritesFilter || sortBy === "favorites" || sortBy === "non-favorites") {
+        setData((prev) =>
+          prev.map((r) => r.id === leadId ? { ...r, is_favorite: isFavorite } : r)
+        );
+      }
 
       toast.success(isFavorite ? "נוסף להועדפים ⭐" : "הוסר מהעדפים");
     } catch (err) {
