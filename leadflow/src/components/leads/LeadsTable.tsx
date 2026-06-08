@@ -566,7 +566,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange:       (updater) => {
-      setPagination(typeof updater === 'function' ? updater(pagination) : updater);
+      const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
+      setPagination(newPagination);
+      // Also save immediately to sessionStorage to prevent loss
+      try {
+        sessionStorage.setItem('leadsTablePagination', JSON.stringify(newPagination));
+      } catch {
+        // Ignore storage errors
+      }
     },
     getCoreRowModel:          getCoreRowModel(),
     getSortedRowModel:        getSortedRowModel(),
@@ -592,14 +599,6 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setPagination({ pageIndex: 0, pageSize: 20 }); // Reset to page 1 when filters clear
   };
 
-  // Save pagination to sessionStorage whenever it changes
-  useEffect(() => {
-    try {
-      sessionStorage.setItem('leadsTablePagination', JSON.stringify(pagination));
-    } catch {
-      // Ignore storage errors
-    }
-  }, [pagination]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
