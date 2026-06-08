@@ -121,8 +121,6 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     }
   });
 
-  // Track previous filteredData length to detect data-only changes vs filter changes
-  const prevFilteredDataLengthRef = useRef(filteredData.length);
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -600,39 +598,10 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     pageCount:                Math.ceil(filteredData.length / pagination.pageSize),
     initialState:             { pagination: { pageSize: 20 } },
     enableRowSelection:       true,
+    // Use manual pagination to have full control over page state
+    manualPagination:         true,
   });
 
-  // Force pagination state if table resets it
-  useEffect(() => {
-    const checkAndRestore = () => {
-      try {
-        const saved = sessionStorage.getItem('leadsTablePagination');
-        if (saved) {
-          const savedPagination = JSON.parse(saved);
-          const currentPageIndex = table.getState().pagination.pageIndex;
-
-          // If table's internal state was reset to page 0, restore from saved
-          if (currentPageIndex !== savedPagination.pageIndex && currentPageIndex === 0 && savedPagination.pageIndex !== 0) {
-            setPagination(savedPagination);
-          }
-        }
-      } catch {
-        // Ignore errors
-      }
-    };
-
-    // Check immediately and also on a timer to catch delayed resets
-    checkAndRestore();
-    const timer = setTimeout(checkAndRestore, 50);
-
-    // Also check after longer delay to catch any async resets
-    const timer2 = setTimeout(checkAndRestore, 200);
-
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(timer2);
-    };
-  }, [filteredData, table]);
 
   const hasActiveFilters =
     statusFilter !== "all" ||
@@ -651,33 +620,6 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   };
 
 
-  // Restore pagination from sessionStorage when data changes (but not filters)
-  useEffect(() => {
-    const currentLength = filteredData.length;
-    const prevLength = prevFilteredDataLengthRef.current;
-
-    // If length changed, restore pagination from sessionStorage
-    // This handles the case where data was updated but table resets pagination
-    if (currentLength !== prevLength) {
-      try {
-        const saved = sessionStorage.getItem('leadsTablePagination');
-        if (saved) {
-          const savedPagination = JSON.parse(saved);
-          // Only restore if it's different from current
-          if (
-            savedPagination.pageIndex !== pagination.pageIndex ||
-            savedPagination.pageSize !== pagination.pageSize
-          ) {
-            setPagination(savedPagination);
-          }
-        }
-      } catch {
-        // Ignore errors
-      }
-    }
-
-    prevFilteredDataLengthRef.current = currentLength;
-  }, [filteredData.length, pagination]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
