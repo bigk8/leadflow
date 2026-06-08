@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
+import { useMemo, useState, useTransition, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -111,14 +111,9 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
-  const [currentPageIndex,   setCurrentPageIndex]  = useState(() => {
-    // Restore page from localStorage on init
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('leadsTablePageIndex');
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  });
+  // Use a ref to prevent unnecessary re-renders when data changes
+  const pageIndexRef = useRef(0);
+  const [currentPageIndex,   setCurrentPageIndex]  = useState(0);
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -565,7 +560,8 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange:       (updater) => {
-      const newState = typeof updater === 'function' ? updater({ pageIndex: currentPageIndex, pageSize: 20 }) : updater;
+      const newState = typeof updater === 'function' ? updater({ pageIndex: pageIndexRef.current, pageSize: 20 }) : updater;
+      pageIndexRef.current = newState.pageIndex;
       setCurrentPageIndex(newState.pageIndex);
     },
     getCoreRowModel:          getCoreRowModel(),
@@ -591,16 +587,15 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setCurrentPageIndex(0); // Reset to page 1 when filters clear
   };
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters change (filters only)
   useEffect(() => {
+    pageIndexRef.current = 0;
     setCurrentPageIndex(0);
   }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
 
-  // Save current page to localStorage
+  // Update ref when state changes (for table updates)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('leadsTablePageIndex', currentPageIndex.toString());
-    }
+    pageIndexRef.current = currentPageIndex;
   }, [currentPageIndex]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
