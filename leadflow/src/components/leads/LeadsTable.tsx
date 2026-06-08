@@ -618,25 +618,34 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
           favoritesFilter || globalFilter !== "");
 
       if (shouldBlock) {
-        console.log(`🚫 Blocking pagination reset from ${pagination.pageIndex} to 0`);
+        console.log(`🚫 BLOCKING reset from ${pagination.pageIndex} to 0`);
         return;
       }
 
-      console.log(`✅ Pagination change: ${pagination.pageIndex} -> ${newPagination.pageIndex}`);
+      console.log(`✅ Pagination: ${pagination.pageIndex} -> ${newPagination.pageIndex}`);
       setPagination(newPagination);
 
-      // Save to sessionStorage AND URL
+      // Aggressively save to sessionStorage - multiple times to ensure it sticks
       try {
-        sessionStorage.setItem('leadsTablePagination', JSON.stringify(newPagination));
-        // Update URL to include page param for better persistence
-        if (typeof window !== 'undefined') {
-          const params = new URLSearchParams(window.location.search);
-          params.set('page', newPagination.pageIndex.toString());
-          window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-          console.log(`📍 Updated URL with page=${newPagination.pageIndex}`);
-        }
+        const paginationStr = JSON.stringify(newPagination);
+        sessionStorage.setItem('leadsTablePagination', paginationStr);
+        // Save multiple times with a tiny delay to ensure it persists
+        setTimeout(() => sessionStorage.setItem('leadsTablePagination', paginationStr), 0);
+        setTimeout(() => sessionStorage.setItem('leadsTablePagination', paginationStr), 10);
+        console.log(`💾 Saved to sessionStorage: ${newPagination.pageIndex}`);
       } catch (e) {
         console.error("Error saving pagination:", e);
+      }
+
+      // Also try to update URL via router
+      try {
+        const params = new URLSearchParams(window.location.search);
+        params.set('page', newPagination.pageIndex.toString());
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({ page: newPagination.pageIndex }, '', newUrl);
+        console.log(`📍 URL updated: ?page=${newPagination.pageIndex}`);
+      } catch (e) {
+        console.error("Error updating URL:", e);
       }
     },
     getCoreRowModel:          getCoreRowModel(),
