@@ -149,6 +149,41 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     console.log(`📍 Pagination state changed to page: ${pagination.pageIndex}`);
   }, [pagination.pageIndex]);
 
+  // THE NUCLEAR OPTION: Redirect back to saved page if it was reset
+  useEffect(() => {
+    const checkAndRestore = () => {
+      try {
+        const saved = sessionStorage.getItem('leadsTablePagination');
+        if (!saved) return;
+
+        const savedPage = JSON.parse(saved).pageIndex;
+        const currentPageFromTable = table.getState().pagination.pageIndex;
+        const currentPageFromState = pagination.pageIndex;
+
+        // If table shows page 0 but we saved something else, use router to restore
+        if (currentPageFromTable === 0 && savedPage !== 0) {
+          console.log(`🚨 NUCLEAR: Page was reset! Forcing back to ${savedPage}`);
+
+          // Use replace state to go back to saved page
+          const params = new URLSearchParams(window.location.search);
+          params.set('page', savedPage.toString());
+          window.history.replaceState({ page: savedPage }, '', `${window.location.pathname}?${params}`);
+
+          // Force both state and table
+          setPagination({ pageIndex: savedPage, pageSize: 20 });
+          table.setPageIndex(savedPage);
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+    };
+
+    // Check immediately and repeatedly
+    checkAndRestore();
+    const interval = setInterval(checkAndRestore, 100);
+    return () => clearInterval(interval);
+  }, []);
+
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
