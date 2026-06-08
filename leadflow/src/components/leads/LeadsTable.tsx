@@ -626,6 +626,22 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setPagination({ pageIndex: 0, pageSize: 20 });
   }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
 
+  // CRITICAL: Force table to use our pagination state on every render
+  // This overrides any internal state changes react-table might make
+  useEffect(() => {
+    // Get the current table page from sessionStorage
+    try {
+      const saved = sessionStorage.getItem('leadsTablePagination');
+      if (saved) {
+        const savedPagination = JSON.parse(saved);
+        // Force pagination to be exactly what we saved
+        table.setPageIndex(savedPagination.pageIndex);
+      }
+    } catch {
+      // Ignore errors
+    }
+  }, [data, table]);
+
   /* ── Render ──────────────────────────────────────────────────────────── */
 
   return (
