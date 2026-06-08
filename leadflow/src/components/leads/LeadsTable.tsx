@@ -94,6 +94,11 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const supabase  = createClient();
   const [isPending, startTransition] = useTransition();
 
+  // Debug: Check if component is remounting
+  useEffect(() => {
+    console.log("🔄 LeadsTable mounted/updated, initialData length:", initialData.length);
+  }, []);
+
   // Table state
   const [data,            setData]           = useState<LeadRow[]>(initialData);
   const [sorting,         setSorting]        = useState<SortingState>([{ id: "created_at", desc: true }]);
@@ -119,22 +124,30 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         const params = new URLSearchParams(window.location.search);
         const pageParam = params.get('page');
         if (pageParam) {
-          console.log(`📍 Loaded page from URL: ${pageParam}`);
-          return { pageIndex: parseInt(pageParam, 10), pageSize: 20 };
+          const pageIndex = parseInt(pageParam, 10);
+          console.log(`📍 Init from URL: page=${pageIndex}`);
+          return { pageIndex, pageSize: 20 };
         }
       }
 
       // Fall back to sessionStorage
       const saved = sessionStorage.getItem('leadsTablePagination');
       if (saved) {
-        console.log(`📍 Loaded page from sessionStorage`);
-        return JSON.parse(saved);
+        const p = JSON.parse(saved);
+        console.log(`📍 Init from sessionStorage: page=${p.pageIndex}`);
+        return p;
       }
     } catch (e) {
       console.error("Error loading pagination:", e);
     }
+    console.log(`📍 Init default: page=0`);
     return { pageIndex: 0, pageSize: 20 };
   });
+
+  // Debug pagination state changes
+  useEffect(() => {
+    console.log(`📍 Pagination state changed to page: ${pagination.pageIndex}`);
+  }, [pagination.pageIndex]);
 
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
