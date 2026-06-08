@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
+import { useMemo, useState, useTransition, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -111,8 +111,15 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
-  // Pagination state - maintained across data updates
-  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
+  // Pagination state - initialized from sessionStorage to persist across renders
+  const [pagination, setPagination] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('leadsTablePagination');
+      return saved ? JSON.parse(saved) : { pageIndex: 0, pageSize: 20 };
+    } catch {
+      return { pageIndex: 0, pageSize: 20 };
+    }
+  });
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -584,6 +591,15 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setGlobalFilter("");
     setPagination({ pageIndex: 0, pageSize: 20 }); // Reset to page 1 when filters clear
   };
+
+  // Save pagination to sessionStorage whenever it changes
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('leadsTablePagination', JSON.stringify(pagination));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [pagination]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
