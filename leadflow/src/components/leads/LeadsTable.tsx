@@ -111,14 +111,29 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
-  // Pagination state - initialized from sessionStorage to persist across renders
+  // Pagination state - initialized from URL or sessionStorage
   const [pagination, setPagination] = useState(() => {
     try {
+      // First try URL params
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const pageParam = params.get('page');
+        if (pageParam) {
+          console.log(`📍 Loaded page from URL: ${pageParam}`);
+          return { pageIndex: parseInt(pageParam, 10), pageSize: 20 };
+        }
+      }
+
+      // Fall back to sessionStorage
       const saved = sessionStorage.getItem('leadsTablePagination');
-      return saved ? JSON.parse(saved) : { pageIndex: 0, pageSize: 20 };
-    } catch {
-      return { pageIndex: 0, pageSize: 20 };
+      if (saved) {
+        console.log(`📍 Loaded page from sessionStorage`);
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Error loading pagination:", e);
     }
+    return { pageIndex: 0, pageSize: 20 };
   });
 
 
@@ -583,25 +598,32 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
       const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
 
       // Prevent unwanted resets: if trying to go to page 0 when we're not, don't do it
-      // This blocks react-table's internal resets from data changes
       const shouldBlock =
         newPagination.pageIndex === 0 &&
         pagination.pageIndex !== 0 &&
-        // Only block if we haven't explicitly changed filters
         !(statusFilter !== "all" || priorityFilter !== "all" || sourceFilter !== "all" ||
           favoritesFilter || globalFilter !== "");
 
       if (shouldBlock) {
-        // Don't update - keep current pagination
+        console.log(`🚫 Blocking pagination reset from ${pagination.pageIndex} to 0`);
         return;
       }
 
+      console.log(`✅ Pagination change: ${pagination.pageIndex} -> ${newPagination.pageIndex}`);
       setPagination(newPagination);
-      // Also save immediately to sessionStorage to prevent loss
+
+      // Save to sessionStorage AND URL
       try {
         sessionStorage.setItem('leadsTablePagination', JSON.stringify(newPagination));
-      } catch {
-        // Ignore storage errors
+        // Update URL to include page param for better persistence
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          params.set('page', newPagination.pageIndex.toString());
+          window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+          console.log(`📍 Updated URL with page=${newPagination.pageIndex}`);
+        }
+      } catch (e) {
+        console.error("Error saving pagination:", e);
       }
     },
     getCoreRowModel:          getCoreRowModel(),
