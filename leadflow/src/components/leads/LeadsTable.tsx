@@ -644,11 +644,15 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         const savedPagination = JSON.parse(saved);
         // Force pagination to be exactly what we saved
         table.setPageIndex(savedPagination.pageIndex);
+        // Also ensure state matches
+        if (pagination.pageIndex !== savedPagination.pageIndex) {
+          setPagination(savedPagination);
+        }
       }
     } catch {
       // Ignore errors
     }
-  }, [data, table]);
+  }, [data, table, pagination]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
