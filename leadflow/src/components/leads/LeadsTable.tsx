@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, useCallback, useEffect, useRef } from "react";
+import { useMemo, useState, useTransition, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -111,9 +111,8 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
-  // Use a ref to prevent unnecessary re-renders when data changes
-  const pageIndexRef = useRef(0);
-  const [currentPageIndex,   setCurrentPageIndex]  = useState(0);
+  // Pagination state - maintained across data updates
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
 
@@ -554,15 +553,13 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
       sorting,
       columnFilters,
       columnVisibility,
-      pagination:   { pageIndex: pageIndexRef.current, pageSize: 20 }
+      pagination
     },
     onSortingChange:          setSorting,
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange:       (updater) => {
-      const newState = typeof updater === 'function' ? updater({ pageIndex: pageIndexRef.current, pageSize: 20 }) : updater;
-      pageIndexRef.current = newState.pageIndex;
-      setCurrentPageIndex(newState.pageIndex);
+      setPagination(typeof updater === 'function' ? updater(pagination) : updater);
     },
     getCoreRowModel:          getCoreRowModel(),
     getSortedRowModel:        getSortedRowModel(),
@@ -588,16 +585,10 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setCurrentPageIndex(0); // Reset to page 1 when filters clear
   };
 
-  // Reset to page 1 when filters change (filters only)
+  // Reset to page 1 when filters change
   useEffect(() => {
-    pageIndexRef.current = 0;
-    setCurrentPageIndex(0);
+    setPagination({ pageIndex: 0, pageSize: 20 });
   }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
-
-  // Update ref when state changes (for table updates)
-  useEffect(() => {
-    pageIndexRef.current = currentPageIndex;
-  }, [currentPageIndex]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
