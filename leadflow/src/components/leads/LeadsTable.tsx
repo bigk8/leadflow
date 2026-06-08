@@ -692,20 +692,24 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
       if (saved) {
         const savedPagination = JSON.parse(saved);
         const tableCurrentPage = table.getState().pagination.pageIndex;
-        console.log(`📄 Effect: saved=${savedPagination.pageIndex}, table=${tableCurrentPage}, state=${pagination.pageIndex}`);
+        console.log(`📄 Restore: saved=${savedPagination.pageIndex}, table=${tableCurrentPage}, state=${pagination.pageIndex}`);
 
-        // Force pagination to be exactly what we saved
-        table.setPageIndex(savedPagination.pageIndex);
+        // If table page is 0 but we saved something else, restore it
+        if (tableCurrentPage === 0 && savedPagination.pageIndex !== 0) {
+          console.log(`🔄 RESTORING PAGE from ${tableCurrentPage} to ${savedPagination.pageIndex}`);
+          table.setPageIndex(savedPagination.pageIndex);
+        }
+
         // Also ensure state matches
         if (pagination.pageIndex !== savedPagination.pageIndex) {
-          console.log(`📄 Syncing state: ${pagination.pageIndex} -> ${savedPagination.pageIndex}`);
+          console.log(`🔄 RESTORING STATE from ${pagination.pageIndex} to ${savedPagination.pageIndex}`);
           setPagination(savedPagination);
         }
       }
     } catch (e) {
       console.error("📄 Error in pagination effect:", e);
     }
-  }, [data, table, pagination]);
+  }, [data, table, pagination.pageIndex]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
