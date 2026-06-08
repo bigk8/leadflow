@@ -168,6 +168,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
 
   const handleToggleFavorite = useCallback(async (leadId: string, isFavorite: boolean) => {
     try {
+      console.log(`🌟 Before favorite toggle: currentPageIndex = ${pagination.pageIndex}`);
       const { error } = await supabase
         .from("leads")
         // @ts-expect-error - Supabase client type inference issue with new columns
@@ -199,10 +200,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
       // Update successful - DON'T update setData to prevent pagination reset
       // The is_favorite change doesn't affect pagination/filtering so we can skip the update
       // Only update in place if we're actually filtering by favorites
+      console.log(`🌟 After favorite update: shouldUpdateData = ${favoritesFilter || sortBy === "favorites" || sortBy === "non-favorites"}`);
       if (favoritesFilter || sortBy === "favorites" || sortBy === "non-favorites") {
+        console.log(`🌟 Updating data because filters affected`);
         setData((prev) =>
           prev.map((r) => r.id === leadId ? { ...r, is_favorite: isFavorite } : r)
         );
+      } else {
+        console.log(`🌟 NOT updating data to preserve pagination`);
       }
 
       toast.success(isFavorite ? "נוסף להועדפים ⭐" : "הוסר מהעדפים");
@@ -642,15 +647,19 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
       const saved = sessionStorage.getItem('leadsTablePagination');
       if (saved) {
         const savedPagination = JSON.parse(saved);
+        const tableCurrentPage = table.getState().pagination.pageIndex;
+        console.log(`📄 Effect: saved=${savedPagination.pageIndex}, table=${tableCurrentPage}, state=${pagination.pageIndex}`);
+
         // Force pagination to be exactly what we saved
         table.setPageIndex(savedPagination.pageIndex);
         // Also ensure state matches
         if (pagination.pageIndex !== savedPagination.pageIndex) {
+          console.log(`📄 Syncing state: ${pagination.pageIndex} -> ${savedPagination.pageIndex}`);
           setPagination(savedPagination);
         }
       }
-    } catch {
-      // Ignore errors
+    } catch (e) {
+      console.error("📄 Error in pagination effect:", e);
     }
   }, [data, table, pagination]);
 
