@@ -85,6 +85,7 @@ function StatsRow({ leads }: { leads: LeadRow[] }) {
 /* ─── Page ──────────────────────────────────────────────────────────────── */
 
 export default async function LeadsPage({ searchParams }: LeadsPageProps) {
+  console.log("📄 LeadsPage SERVER rendering");
   const supabase = await createClient();
 
   const {
@@ -98,6 +99,7 @@ export default async function LeadsPage({ searchParams }: LeadsPageProps) {
     .order("created_at", { ascending: false });
 
   if (error) console.error("[LeadsPage]", error.message);
+  console.log(`📄 LeadsPage loaded ${leads?.length || 0} leads`);
 
   // Ensure is_favorite field exists (default to false if column doesn't exist yet)
   const allLeads = ((leads ?? []) as LeadRow[]).map(lead => ({
