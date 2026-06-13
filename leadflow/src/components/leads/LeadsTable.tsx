@@ -260,18 +260,9 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         return;
       }
 
-      // Update successful - DON'T update setData to prevent pagination reset
-      // The is_favorite change doesn't affect pagination/filtering so we can skip the update
-      // Only update in place if we're actually filtering by favorites
-      console.log(`🌟 After favorite update: shouldUpdateData = ${favoritesFilter || sortBy === "favorites" || sortBy === "non-favorites"}`);
-      if (favoritesFilter || sortBy === "favorites" || sortBy === "non-favorites") {
-        console.log(`🌟 Updating data because filters affected`);
-        setData((prev) =>
-          prev.map((r) => r.id === leadId ? { ...r, is_favorite: isFavorite } : r)
-        );
-      } else {
-        console.log(`🌟 NOT updating data to preserve pagination`);
-      }
+      // NEVER update setData for is_favorite - it causes pagination reset
+      // The favorite status doesn't affect table ordering, so skip the update entirely
+      console.log(`🌟 SKIPPING data update to preserve pagination`);
 
       toast.success(isFavorite ? "נוסף להועדפים ⭐" : "הוסר מהעדפים");
     } catch (err) {
