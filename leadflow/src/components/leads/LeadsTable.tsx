@@ -756,6 +756,8 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
 
   /* ── Render ──────────────────────────────────────────────────────────── */
 
+  console.log(`🎬 LeadsTable RENDER - page=${pagination.pageIndex}, data.length=${data.length}, URL=?page=${new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('page') || 0}`);
+
   return (
     <div className="space-y-4">
 
