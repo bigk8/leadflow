@@ -89,7 +89,12 @@ interface LeadsTableProps {
 
 /* ─── Component ─────────────────────────────────────────────────────────── */
 
+let mountCount = 0;
+
 export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableProps) {
+  mountCount++;
+  console.log(`🔴 LeadsTable MOUNT #${mountCount}`);
+
   const router    = useRouter();
   const supabase  = createClient();
   const [isPending, startTransition] = useTransition();
