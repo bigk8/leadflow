@@ -56,6 +56,36 @@ export const LEAD_SOURCES = [
   "אחר",
 ] as const;
 
+/* ─── Sales method (שיטת המכירה) ─────────────────────────────────────────── */
+
+export const WEBSITE_STATUS_LABELS: Record<string, string> = {
+  none: "אין אתר",
+  old:  "אתר ישן",
+  has:  "יש אתר",
+};
+
+export const SENT_ASSET_LABELS: Record<string, string> = {
+  site_a: "אתר א׳ (SITUS מלא)",
+  site_b: "אתר ב׳ (לפני/אחרי)",
+  demo:   "דמו אישי",
+};
+
+export const INDUSTRIES = [
+  "רופא / קליניקה",
+  "רופא שיניים",
+  "עורך דין",
+  "רואה חשבון",
+  "אינסטלטור / שרברב",
+  "חשמלאי",
+  "שיפוצים / בנייה",
+  "מסעדה / בית קפה",
+  "מספרה / קוסמטיקה",
+  "כושר / סטודיו",
+  "הובלות",
+  "מוסך / רכב",
+  "אחר",
+] as const;
+
 /* ─── Pipeline order (for kanban / sorting) ─────────────────────────────── */
 
 export const PIPELINE_ORDER: LeadStatus[] = [

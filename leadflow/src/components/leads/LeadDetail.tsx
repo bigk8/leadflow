@@ -575,6 +575,33 @@ export function LeadDetail({
               />
             )}
 
+            {(lead.website_status || lead.industry || lead.sent_asset || lead.demo_url) && (
+              <>
+                <Separator />
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">שיטת מכירה</p>
+                {lead.industry && (
+                  <InfoRow icon={Briefcase} label="תחום" value={lead.industry} />
+                )}
+                {lead.website_status && (
+                  <InfoRow
+                    icon={Globe}
+                    label="מצב האתר שלו"
+                    value={{ none: "אין אתר", old: "אתר ישן", has: "יש אתר" }[lead.website_status]}
+                  />
+                )}
+                {lead.sent_asset && (
+                  <InfoRow
+                    icon={ArrowLeft}
+                    label="נשלח אליו"
+                    value={{ site_a: "אתר א׳ (SITUS מלא)", site_b: "אתר ב׳ (לפני/אחרי)", demo: "דמו אישי" }[lead.sent_asset]}
+                  />
+                )}
+                {lead.demo_url && (
+                  <InfoRow icon={Globe} label="הדמו שלו" value={lead.demo_url} href={lead.demo_url} />
+                )}
+              </>
+            )}
+
             {lead.notes && (
               <>
                 <Separator />

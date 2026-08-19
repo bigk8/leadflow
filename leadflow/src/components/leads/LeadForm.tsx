@@ -8,7 +8,10 @@ import { Loader2, Save, X } from "lucide-react";
 
 import { leadSchema, type LeadFormData } from "@/lib/validations/lead.schema";
 import { createClient } from "@/lib/supabase/client";
-import { LEAD_SOURCES, STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants/leads";
+import {
+  LEAD_SOURCES, STATUS_LABELS, PRIORITY_LABELS,
+  WEBSITE_STATUS_LABELS, SENT_ASSET_LABELS, INDUSTRIES,
+} from "@/lib/constants/leads";
 import { cn } from "@/lib/utils";
 import type { LeadRow } from "@/types/database.types";
 
@@ -87,6 +90,10 @@ export function LeadForm({ lead, userId }: LeadFormProps) {
           next_follow_up_at: lead.next_follow_up_at
             ? lead.next_follow_up_at.slice(0, 16) // datetime-local format
             : "",
+          website_status: lead.website_status ?? undefined,
+          industry:       lead.industry       ?? "",
+          sent_asset:     lead.sent_asset     ?? undefined,
+          demo_url:       lead.demo_url       ?? "",
         }
       : {
           status:   "new",
@@ -111,6 +118,10 @@ export function LeadForm({ lead, userId }: LeadFormProps) {
       next_follow_up_at: data.next_follow_up_at
         ? new Date(data.next_follow_up_at).toISOString()
         : null,
+      website_status: data.website_status ?? null,
+      industry:       data.industry       || null,
+      sent_asset:     data.sent_asset     ?? null,
+      demo_url:       data.demo_url       || null,
     };
 
     if (isEdit) {
@@ -300,6 +311,79 @@ export function LeadForm({ lead, userId }: LeadFormProps) {
               />
             </Field>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Section 2.5: שיטת מכירה ─────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">שיטת מכירה</CardTitle>
+          <CardDescription>מצב הליד ומה נשלח אליו</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Website status */}
+            <Field label="מצב האתר שלו" error={errors.website_status?.message}>
+              <Select
+                defaultValue={watch("website_status") ?? undefined}
+                onValueChange={(v) => setValue("website_status", v as LeadFormData["website_status"], { shouldDirty: true })}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="בחר מצב" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(WEBSITE_STATUS_LABELS).map(
+                    ([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            {/* Industry */}
+            <Field label="תחום העסק" error={errors.industry?.message}>
+              <Select
+                defaultValue={watch("industry") || undefined}
+                onValueChange={(v) => setValue("industry", v, { shouldDirty: true })}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="בחר תחום" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDUSTRIES.map((i) => (
+                    <SelectItem key={i} value={i}>{i}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            {/* Sent asset */}
+            <Field label="מה נשלח אליו" error={errors.sent_asset?.message}>
+              <Select
+                defaultValue={watch("sent_asset") ?? undefined}
+                onValueChange={(v) => setValue("sent_asset", v as LeadFormData["sent_asset"], { shouldDirty: true })}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="עוד לא נשלח" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(SENT_ASSET_LABELS).map(
+                    ([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </Field>
+          </div>
+
+          {/* Demo URL */}
+          <Field label="קישור לדמו האישי שלו" error={errors.demo_url?.message}>
+            <Input
+              type="url"
+              placeholder="https://..."
+              dir="ltr"
+              className={cn("h-10", errors.demo_url && "border-destructive")}
+              {...register("demo_url")}
+            />
+          </Field>
         </CardContent>
       </Card>
 

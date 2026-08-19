@@ -74,6 +74,10 @@ export interface LeadRow {
   updated_at:        string;
   is_favorite:       boolean;
   is_irrelevant:     boolean;
+  website_status:    "none" | "old" | "has" | null;
+  industry:          string | null;
+  sent_asset:        "site_a" | "site_b" | "demo" | null;
+  demo_url:          string | null;
 }
 
 export interface CallRow {

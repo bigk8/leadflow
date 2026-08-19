@@ -61,7 +61,7 @@ export default async function ReportsPage() {
 
   const [leadsRes, callsRes] = await Promise.all([
     supabase.from("leads").select("*").order("created_at", { ascending: false }),
-    supabase.from("calls").select("id,type,outcome,called_at,duration_seconds").order("called_at", { ascending: false }),
+    supabase.from("calls").select("id,type,outcome,called_at,duration_seconds,lead_id").order("called_at", { ascending: false }),
   ]);
 
   const allLeads = (leadsRes.data ?? []) as LeadRow[];
@@ -123,6 +123,56 @@ export default async function ReportsPage() {
     return { label: format(d, "MMM", { locale: he }), count, won: wonM };
   });
   const maxMonthCount = Math.max(...months.map((m) => m.count), 1);
+
+  /* ── ניתוח שיחות קרות: לפי שעה, יום ותחום ────────────────────────────── */
+
+  const SUCCESS_OUTCOMES = new Set(["interested", "meeting_set", "deal_closed"]);
+  const isSuccess = (c: CallRow) => !!c.outcome && SUCCESS_OUTCOMES.has(c.outcome);
+
+  const hourOf = (iso: string) =>
+    parseInt(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Jerusalem" }).format(new Date(iso)), 10);
+  const dayOf = (iso: string) =>
+    new Intl.DateTimeFormat("he-IL", { weekday: "long", timeZone: "Asia/Jerusalem" }).format(new Date(iso));
+
+  // לפי שעה (רק שעות עם שיחות)
+  const byHour: Record<number, { calls: number; success: number }> = {};
+  for (const c of calls) {
+    const h = hourOf(c.called_at);
+    byHour[h] ??= { calls: 0, success: 0 };
+    byHour[h].calls++;
+    if (isSuccess(c)) byHour[h].success++;
+  }
+  const hourRows = Object.entries(byHour)
+    .map(([h, v]) => ({ h: +h, ...v, rate: Math.round((v.success / v.calls) * 100) }))
+    .sort((a, b) => a.h - b.h);
+
+  // לפי יום בשבוע
+  const DAY_ORDER = ["יום ראשון","יום שני","יום שלישי","יום רביעי","יום חמישי","יום שישי","שבת"];
+  const byDay: Record<string, { calls: number; success: number }> = {};
+  for (const c of calls) {
+    const d = dayOf(c.called_at);
+    byDay[d] ??= { calls: 0, success: 0 };
+    byDay[d].calls++;
+    if (isSuccess(c)) byDay[d].success++;
+  }
+  const dayRows = DAY_ORDER.filter((d) => byDay[d])
+    .map((d) => ({ d, ...byDay[d], rate: Math.round((byDay[d].success / byDay[d].calls) * 100) }));
+
+  // לפי תחום העסק
+  const leadIndustry = new Map(allLeads.map((l) => [l.id, l.industry ?? "לא צוין"]));
+  const byIndustry: Record<string, { calls: number; success: number }> = {};
+  for (const c of calls) {
+    const ind = leadIndustry.get(c.lead_id) ?? "לא צוין";
+    byIndustry[ind] ??= { calls: 0, success: 0 };
+    byIndustry[ind].calls++;
+    if (isSuccess(c)) byIndustry[ind].success++;
+  }
+  const industryRows = Object.entries(byIndustry)
+    .map(([ind, v]) => ({ ind, ...v, rate: Math.round((v.success / v.calls) * 100) }))
+    .sort((a, b) => b.rate - a.rate || b.calls - a.calls)
+    .slice(0, 10);
+
+  const rateColor = (r: number) => r >= 30 ? "bg-green-500" : r >= 15 ? "bg-amber-400" : "bg-red-400";
 
   return (
     <div className="space-y-6">
@@ -213,6 +263,63 @@ export default async function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── ניתוח שיחות קרות ─────────────────────────────────────────────── */}
+      <Card className="border-border/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">מתי הכי כדאי לחייג?</CardTitle>
+          <CardDescription>
+            אחוז שיחות מוצלחות (מעוניין / נקבעה פגישה / נסגרה עסקה) לפי שעה, יום ותחום
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {totalCalls === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              עוד אין שיחות מתועדות. התחל לתעד כל שיחה (כולל שעה ותוצאה) — ואחרי כ־30 שיחות
+              הדוח הזה יגיד לך בדיוק מתי ולמי הכי משתלם לחייג.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* לפי שעה */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">לפי שעת חיוג</p>
+                {hourRows.map((r) => (
+                  <div key={r.h} className="flex items-center gap-3">
+                    <span className="text-sm tabular-nums w-14 text-start" dir="ltr">{String(r.h).padStart(2,"0")}:00</span>
+                    <Bar pct={r.rate} color={rateColor(r.rate)} />
+                    <span className="text-sm font-bold tabular-nums w-10 text-start">{r.rate}%</span>
+                    <span className="text-xs text-muted-foreground w-12 text-start">{r.calls} שיחות</span>
+                  </div>
+                ))}
+              </div>
+              {/* לפי יום */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">לפי יום בשבוע</p>
+                {dayRows.map((r) => (
+                  <div key={r.d} className="flex items-center gap-3">
+                    <span className="text-sm w-20 text-start truncate">{r.d}</span>
+                    <Bar pct={r.rate} color={rateColor(r.rate)} />
+                    <span className="text-sm font-bold tabular-nums w-10 text-start">{r.rate}%</span>
+                    <span className="text-xs text-muted-foreground w-12 text-start">{r.calls} שיחות</span>
+                  </div>
+                ))}
+              </div>
+              {/* לפי תחום */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">לפי תחום העסק</p>
+                {industryRows.map((r) => (
+                  <div key={r.ind} className="flex items-center gap-3">
+                    <span className="text-sm w-24 text-start truncate">{r.ind}</span>
+                    <Bar pct={r.rate} color={rateColor(r.rate)} />
+                    <span className="text-sm font-bold tabular-nums w-10 text-start">{r.rate}%</span>
+                    <span className="text-xs text-muted-foreground w-12 text-start">{r.calls} שיחות</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Source breakdown */}
       {sources.length > 0 && (

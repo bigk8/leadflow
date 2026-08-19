@@ -25,6 +25,10 @@ export const leadSchema = z.object({
     .nullable(),
   notes: z.string().max(2000, "הערות ארוכות מדי").optional().or(z.literal("")),
   next_follow_up_at: z.string().optional().nullable(),
+  website_status: z.enum(["none", "old", "has"]).optional().nullable(),
+  industry:       z.string().max(100).optional().or(z.literal("")),
+  sent_asset:     z.enum(["site_a", "site_b", "demo"]).optional().nullable(),
+  demo_url:       z.string().url("כתובת דמו לא תקינה").optional().or(z.literal("")),
 });
 
 export type LeadFormData = z.infer<typeof leadSchema>;
