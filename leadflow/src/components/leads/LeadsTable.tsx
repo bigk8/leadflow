@@ -85,11 +85,12 @@ function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
 interface LeadsTableProps {
   initialData: LeadRow[];
   initialSearchQuery?: string;
+  initialHideIrrelevant?: boolean;
 }
 
 /* ─── Component ─────────────────────────────────────────────────────────── */
 
-export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableProps) {
+export function LeadsTable({ initialData, initialSearchQuery = "", initialHideIrrelevant = true }: LeadsTableProps) {
   const router    = useRouter();
   const supabase  = createClient();
   const [isPending, startTransition] = useTransition();
@@ -108,7 +109,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [priorityFilter,     setPriorityFilter]    = useState<string>("all");
   const [sourceFilter,       setSourceFilter]      = useState<string>("all");
   const [favoritesFilter,    setFavoritesFilter]   = useState(false);
-  const [hideIrrelevant,     setHideIrrelevant]    = useState(true);
+  const [hideIrrelevant,     setHideIrrelevant]    = useState(initialHideIrrelevant);
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
@@ -590,6 +591,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   useEffect(() => {
     setPagination({ pageIndex: 0, pageSize: 20 });
   }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
+
+  // Keep the page inside the range when rows disappear (e.g. marked irrelevant on the last page)
+  const pageCount = Math.max(1, Math.ceil(filteredData.length / pagination.pageSize));
+  useEffect(() => {
+    if (pagination.pageIndex > pageCount - 1) {
+      setPagination((prev) => ({ ...prev, pageIndex: pageCount - 1 }));
+    }
+  }, [pageCount, pagination.pageIndex]);
 
 
   /* ── Render ──────────────────────────────────────────────────────────── */

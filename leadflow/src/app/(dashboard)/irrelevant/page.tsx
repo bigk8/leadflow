@@ -47,7 +47,7 @@ export default async function IrrelevantPage() {
           </p>
         </div>
       ) : (
-        <LeadsTable initialData={irrelevantLeads} />
+        <LeadsTable initialData={irrelevantLeads} initialHideIrrelevant={false} />
       )}
     </div>
   );
