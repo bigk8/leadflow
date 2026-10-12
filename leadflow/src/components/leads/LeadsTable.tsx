@@ -89,20 +89,11 @@ interface LeadsTableProps {
 
 /* ─── Component ─────────────────────────────────────────────────────────── */
 
-let mountCount = 0;
-
 export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableProps) {
-  mountCount++;
-  console.log(`🔴 LeadsTable MOUNT #${mountCount}`);
-
   const router    = useRouter();
   const supabase  = createClient();
   const [isPending, startTransition] = useTransition();
 
-  // Debug: Check if component is remounting
-  useEffect(() => {
-    console.log("🔄 LeadsTable mounted/updated, initialData length:", initialData.length);
-  }, []);
 
   // Table state
   const [data,            setData]           = useState<LeadRow[]>(initialData);
@@ -121,73 +112,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   const [pageInput,          setPageInput]         = useState<string>("");
   const [selectedIds,        setSelectedIds]       = useState<Set<string>>(new Set());
   const [sortBy,             setSortBy]            = useState<string>("newest");
-  // Pagination state - initialized from URL or sessionStorage
-  const [pagination, setPagination] = useState(() => {
-    try {
-      // First try URL params
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        const pageParam = params.get('page');
-        if (pageParam) {
-          const pageIndex = parseInt(pageParam, 10);
-          console.log(`📍 Init from URL: page=${pageIndex}`);
-          return { pageIndex, pageSize: 20 };
-        }
-      }
-
-      // Fall back to sessionStorage
-      const saved = sessionStorage.getItem('leadsTablePagination');
-      if (saved) {
-        const p = JSON.parse(saved);
-        console.log(`📍 Init from sessionStorage: page=${p.pageIndex}`);
-        return p;
-      }
-    } catch (e) {
-      console.error("Error loading pagination:", e);
-    }
-    console.log(`📍 Init default: page=0`);
-    return { pageIndex: 0, pageSize: 20 };
-  });
-
-  // Debug pagination state changes
-  useEffect(() => {
-    console.log(`📍 Pagination state changed to page: ${pagination.pageIndex}`);
-  }, [pagination.pageIndex]);
-
-  // THE NUCLEAR OPTION: Redirect back to saved page if it was reset
-  useEffect(() => {
-    const checkAndRestore = () => {
-      try {
-        const saved = sessionStorage.getItem('leadsTablePagination');
-        if (!saved) return;
-
-        const savedPage = JSON.parse(saved).pageIndex;
-        const currentPageFromTable = table.getState().pagination.pageIndex;
-        const currentPageFromState = pagination.pageIndex;
-
-        // If table shows page 0 but we saved something else, use router to restore
-        if (currentPageFromTable === 0 && savedPage !== 0) {
-          console.log(`🚨 NUCLEAR: Page was reset! Forcing back to ${savedPage}`);
-
-          // Use replace state to go back to saved page
-          const params = new URLSearchParams(window.location.search);
-          params.set('page', savedPage.toString());
-          window.history.replaceState({ page: savedPage }, '', `${window.location.pathname}?${params}`);
-
-          // Force both state and table
-          setPagination({ pageIndex: savedPage, pageSize: 20 });
-          table.setPageIndex(savedPage);
-        }
-      } catch (e) {
-        // Ignore errors
-      }
-    };
-
-    // Check immediately and repeatedly
-    checkAndRestore();
-    const interval = setInterval(checkAndRestore, 100);
-    return () => clearInterval(interval);
-  }, []);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
 
 
   /* ── Delete ──────────────────────────────────────────────────────────── */
@@ -216,14 +141,9 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         return;
       }
 
-      // Optimistic update - DON'T update setData to prevent pagination reset
-      // The is_irrelevant change affects filtering (hideIrrelevant toggle)
-      if (hideIrrelevant === false) {
-        // Only update if we're showing irrelevant leads
-        setData((prev) =>
-          prev.map((r) => r.id === leadId ? { ...r, is_irrelevant: isIrrelevant } : r)
-        );
-      }
+      setData((prev) =>
+        prev.map((r) => r.id === leadId ? { ...r, is_irrelevant: isIrrelevant } : r)
+      );
 
       toast.success(isIrrelevant ? "סומן כלא רלוונטי ✓" : "הוסר מלא רלוונטי");
     } catch (err) {
@@ -236,7 +156,6 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
 
   const handleToggleFavorite = useCallback(async (leadId: string, isFavorite: boolean) => {
     try {
-      console.log(`🌟 Before favorite toggle: currentPageIndex = ${pagination.pageIndex}`);
       const { error } = await supabase
         .from("leads")
         // @ts-expect-error - Supabase client type inference issue with new columns
@@ -265,9 +184,9 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
         return;
       }
 
-      // NEVER update setData for is_favorite - it causes pagination reset
-      // The favorite status doesn't affect table ordering, so skip the update entirely
-      console.log(`🌟 SKIPPING data update to preserve pagination`);
+      setData((prev) =>
+        prev.map((r) => r.id === leadId ? { ...r, is_favorite: isFavorite } : r)
+      );
 
       toast.success(isFavorite ? "נוסף להועדפים ⭐" : "הוסר מהעדפים");
     } catch (err) {
@@ -279,7 +198,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
   /* ── Filtered data (status + priority + source + global search) ──────── */
 
   const filteredData = useMemo(() => {
-    let filtered = data.filter((lead) => {
+    const filtered = data.filter((lead) => {
       if (hideIrrelevant && lead.is_irrelevant)                           return false;
       if (statusFilter   !== "all" && lead.status   !== statusFilter)   return false;
       if (priorityFilter !== "all" && lead.priority !== priorityFilter) return false;
@@ -638,64 +557,14 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     onSortingChange:          setSorting,
     onColumnFiltersChange:    setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange:       (updater) => {
-      const newPagination = typeof updater === 'function' ? updater(pagination) : updater;
-
-      // Prevent unwanted resets: if trying to go to page 0 when we're not, don't do it
-      const shouldBlock =
-        newPagination.pageIndex === 0 &&
-        pagination.pageIndex !== 0 &&
-        !(statusFilter !== "all" || priorityFilter !== "all" || sourceFilter !== "all" ||
-          favoritesFilter || globalFilter !== "");
-
-      if (shouldBlock) {
-        console.log(`🚫 BLOCKING reset from ${pagination.pageIndex} to 0`);
-        return;
-      }
-
-      console.log(`✅ Pagination: ${pagination.pageIndex} -> ${newPagination.pageIndex}`);
-      setPagination(newPagination);
-
-      // Aggressively save to sessionStorage - multiple times to ensure it sticks
-      try {
-        const paginationStr = JSON.stringify(newPagination);
-        sessionStorage.setItem('leadsTablePagination', paginationStr);
-        // Save multiple times with a tiny delay to ensure it persists
-        setTimeout(() => sessionStorage.setItem('leadsTablePagination', paginationStr), 0);
-        setTimeout(() => sessionStorage.setItem('leadsTablePagination', paginationStr), 10);
-        console.log(`💾 Saved to sessionStorage: ${newPagination.pageIndex}`);
-      } catch (e) {
-        console.error("Error saving pagination:", e);
-      }
-
-      // Update URL - use both history.replaceState and try router approaches
-      try {
-        const params = new URLSearchParams(window.location.search);
-        params.set('page', newPagination.pageIndex.toString());
-        const newUrl = `${window.location.pathname}?${params.toString()}`;
-
-        // Primary: history.replaceState (works without page reload)
-        window.history.replaceState(
-          { pagination: newPagination },
-          '',
-          newUrl
-        );
-
-        console.log(`📍 URL set to: ?page=${newPagination.pageIndex}`);
-        console.log(`📍 Current URL: ${window.location.href}`);
-      } catch (e) {
-        console.error("Error updating URL:", e);
-      }
-    },
+    onPaginationChange:       setPagination,
     getCoreRowModel:          getCoreRowModel(),
     getSortedRowModel:        getSortedRowModel(),
     getFilteredRowModel:      getFilteredRowModel(),
     getPaginationRowModel:    getPaginationRowModel(),
-    pageCount:                Math.ceil(filteredData.length / pagination.pageSize),
     initialState:             { pagination: { pageSize: 20 } },
     enableRowSelection:       true,
-    // Use manual pagination to have full control over page state
-    manualPagination:         true,
+    autoResetPageIndex:       false,
   });
 
 
@@ -722,37 +591,8 @@ export function LeadsTable({ initialData, initialSearchQuery = "" }: LeadsTableP
     setPagination({ pageIndex: 0, pageSize: 20 });
   }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
 
-  // CRITICAL: Force table to use our pagination state on every render
-  // This overrides any internal state changes react-table might make
-  useEffect(() => {
-    // Get the current table page from sessionStorage
-    try {
-      const saved = sessionStorage.getItem('leadsTablePagination');
-      if (saved) {
-        const savedPagination = JSON.parse(saved);
-        const tableCurrentPage = table.getState().pagination.pageIndex;
-        console.log(`📄 Restore: saved=${savedPagination.pageIndex}, table=${tableCurrentPage}, state=${pagination.pageIndex}`);
-
-        // If table page is 0 but we saved something else, restore it
-        if (tableCurrentPage === 0 && savedPagination.pageIndex !== 0) {
-          console.log(`🔄 RESTORING PAGE from ${tableCurrentPage} to ${savedPagination.pageIndex}`);
-          table.setPageIndex(savedPagination.pageIndex);
-        }
-
-        // Also ensure state matches
-        if (pagination.pageIndex !== savedPagination.pageIndex) {
-          console.log(`🔄 RESTORING STATE from ${pagination.pageIndex} to ${savedPagination.pageIndex}`);
-          setPagination(savedPagination);
-        }
-      }
-    } catch (e) {
-      console.error("📄 Error in pagination effect:", e);
-    }
-  }, [data, table, pagination.pageIndex]);
 
   /* ── Render ──────────────────────────────────────────────────────────── */
-
-  console.log(`🎬 LeadsTable RENDER - page=${pagination.pageIndex}, data.length=${data.length}, URL=?page=${new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('page') || 0}`);
 
   return (
     <div className="space-y-4">
