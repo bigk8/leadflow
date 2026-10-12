@@ -98,7 +98,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "", initialHideIr
 
   // Table state
   const [data,            setData]           = useState<LeadRow[]>(initialData);
-  const [sorting,         setSorting]        = useState<SortingState>([{ id: "created_at", desc: true }]);
+  const [sorting,         setSorting]        = useState<SortingState>([]);
   const [columnFilters,   setColumnFilters]  = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [globalFilter,    setGlobalFilter]   = useState(initialSearchQuery);
@@ -590,7 +590,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "", initialHideIr
   // Reset to page 1 when filters change
   useEffect(() => {
     setPagination({ pageIndex: 0, pageSize: 20 });
-  }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, globalFilter, sortBy]);
+  }, [statusFilter, priorityFilter, sourceFilter, favoritesFilter, hideIrrelevant, globalFilter, sortBy, sorting]);
 
   // Keep the page inside the range when rows disappear (e.g. marked irrelevant on the last page)
   const pageCount = Math.max(1, Math.ceil(filteredData.length / pagination.pageSize));
@@ -672,7 +672,7 @@ export function LeadsTable({ initialData, initialSearchQuery = "", initialHideIr
           </Select>
 
           {/* Sort */}
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select value={sortBy} onValueChange={(value) => { setSortBy(value); setSorting([]); }}>
             <SelectTrigger className="h-9 w-[130px] md:w-[150px] text-xs md:text-sm">
               <SelectValue placeholder="מיון" />
             </SelectTrigger>
